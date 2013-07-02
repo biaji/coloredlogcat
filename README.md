@@ -3,14 +3,14 @@ coloredlogcat
 
 Android Debug Colored Logcat with limited grep and log level filtering
 
-ARGUMENTS:
-     -h                   - Print Help
-     -l logLevel          - NUMBER - 0 (all) to 4 (errors only)
-     -g grepPattern       - STRING - (Regex not supported)
-     -t trailingLines     - NUMBER - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
-     -i                   - Case Insensitive grep
+###Arguments
+     * -h                Print Help
+     * -l num            logLevel(minimum) - 0 (all) to 4 (errors only)
+     * -g str            grepPattern - (Regex not supported)
+     * -t num            trailingLines - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
+     * -i                Case Insensitive grep
 
-EXAMPLES:
+###Examples
      - Show full adb logcat with color and formatting:
        $ ./coloredlogcat.py
      - Only Warnings and Errors

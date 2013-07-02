@@ -2,7 +2,7 @@
 
 '''
 coloredlogcat
-=============
+ == == == == == == =
 
 Android Debug Colored Logcat with limited grep and log level filtering
 
@@ -133,13 +133,13 @@ grep_pattern = None
 grep_trailing_lines = 0
 grep_case_insensitive = False
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"hl:g:it:")
+    opts, args = getopt.getopt(sys.argv[1:], "hl:g:it:")
 except getopt.GetoptError:
     print __doc__
     sys.exit(2)
-opts, args = getopt.getopt(sys.argv[1:],"hl:g:it:",)
+opts, args = getopt.getopt(sys.argv[1:], "hl:g:it:", )
 for opt, arg in opts:
-    if opt in ("-h", "--help","-?"):
+    if opt in ("-h", "--help", "-?"):
         print __doc__
         sys.exit()
     if opt in ("-l"):
@@ -159,6 +159,7 @@ print 'grep_trailing_lines is "', grep_trailing_lines
 
 # invoke adb logcat
 input = os.popen("adb logcat")
+
 
 def grepFind(string, searchPattern):
     if grep_case_insensitive:
@@ -206,17 +207,18 @@ while True:
         filter_match = False
         if grep_pattern:
             if line.lower().find(grep_pattern.lower()) > -1:
-                if log_level==-1 or log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
+                if log_level == -1 or log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
                     grep_trailing_counter = 0
                     filter_match = True
-                    if grepFind(message,grep_pattern) > -1:
-                        matchStart = grepFind(message,grep_pattern)
+                    if grepFind(message, grep_pattern) > -1:
+                        matchStart = grepFind(message, grep_pattern)
                         matchEnd = matchStart + len(grep_pattern)
                         linebuf.write(message[:matchStart])
-                        linebuf.write("%s%s%s" % (format(fg=YELLOW, dim=False),
+                        linebuf.write("%s%s%s" % (
+                            format(fg=YELLOW, dim=False),
                             message[matchStart:matchEnd],
-                            format(reset=True))
-                        )
+                            format(reset=True)
+                        ))
                         linebuf.write(message[matchEnd:])
                     else:
                         linebuf.write(message)
@@ -231,11 +233,9 @@ while True:
                 filter_match = True
         grep_trailing_counter += 1
         if not filter_match:
-            if grep_trailing_lines<99 and grep_trailing_counter > grep_trailing_lines+1:
+            if grep_trailing_lines < 99 and grep_trailing_counter > grep_trailing_lines+1:
                 continue
 
         line = linebuf.getvalue()
 
-
     print line
-    #if len(line) == 0: break

@@ -1,24 +1,31 @@
 #!/usr/bin/python
 
 '''
-    Colored and indeted adb output
+coloredlogcat
+Colored and Indented adb (Android Debugging) Output
 
-    USAGE #1: Show full adb logcat with color and formatting
-        $ ./coloredlogcat.py
 
-    USAGE #2: Show all messages of a current log level or higher (i.e. 4 is Errors Only, 0 is all messages)
-        $ ./coloredlogcat.py LOG_LEVEL[0-4]
+ARGUMENTS:
+ -l <logLevel>         - number - 0 (all) to 4 (errors only)
+ -g <grepPattern>      - string - (Regex not supported)
+ -t <trailingLines>    - number - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
 
-    USAGE #3: Grep for a certain text string
-        $ ./coloredlogcat.py PATTERN
-
-    USAGE #4: Grep for a certain text string and show a certain number of trailing strings after each match
-        $ ./coloredlogcat.py PATTERN TRAILING_LINES
+EXAMPLES:
+ - Show full adb logcat with color and formatting:
+       $ ./coloredlogcat.py
+ - Only Warnings and Errors
+       $ ./coloredlogcat.py -l3
+ - Only show lines containing the word ZEBRA:
+       $ ./coloredlogcat.py -gZEBRA
+ - Show lines containing the pattern \'MONKEY HAT\' and the next 5 trailing lines
+       $ ./coloredlogcat.py -g\'monkey hat\' -t5
+ - Show all Info, Warnings and Errors and highlight the word ZEBRA
+       $ ./coloredlogcat.py -l2 -g\'ZEBRA\' -t99
 
 '''
 
 
-
+import getopt
 import fcntl
 import os
 import re
@@ -112,26 +119,67 @@ TAGTYPES = {
 
 retag = re.compile("^([A-Z])/([^\(]+)\(([^\)]+)\): (.*)$")
 
+HELP_MESSAGE = "\n".join([
+    '\ncoloredlogcat.py',
+    'Colored and Indented adb (Android Debugging) Output',
+    '\n',
+    'ARGUMENTS:',
+    ' -l <logLevel>         - number - 0 (all) to 4 (errors only)',
+    ' -g <grepPattern>      - string - (Regex not supported)',
+    ' -t <trailingLines>    - number - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern'
+    '\n',
+    'EXAMPLES:',
+    ' - Show full adb logcat with color and formatting:',
+    '       $ ./coloredlogcat.py',
+    ' - Only Warnings and Errors',
+    '       $ ./coloredlogcat.py -l3',
+    ' - Only show lines containing the word ZEBRA:',
+    '       $ ./coloredlogcat.py -gZEBRA',
+    ' - Show lines containing the pattern \'MONKEY HAT\' and the next 5 trailing lines',
+    '       $ ./coloredlogcat.py -g\'monkey hat\' -t5',
+    ' - Show all Info, Warnings and Errors and highlight the word ZEBRA',
+    '       $ ./coloredlogcat.py -l2 -g\'ZEBRA\' -t99',
+    '\n'
+])
+
+__doc__
+
 # get args
 
 log_level = -1
 grep_pattern = None
 grep_trailing_lines = 0
-if len(sys.argv) > 1:
-    try:
-        log_level = int(sys.argv[1])
-    except ValueError:
-        grep_pattern = sys.argv[1]
-        if len(sys.argv) > 2:
-            grep_trailing_lines = int(sys.argv[2])
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"hl:g:t:")
+except getopt.GetoptError:
+    print __doc__
+    sys.exit(2)
+opts, args = getopt.getopt(sys.argv[1:],"hl:g:t:",)
+for opt, arg in opts:
+    if opt in ("-h", "--help","-?"):
+        print __doc__
+        sys.exit()
+    if opt in ("-l"):
+        log_level = int(arg)
+    if opt in ("-g"):
+        grep_pattern = arg
+    if opt in ("-t"):
+        if not grep_pattern:
+            print "Error: -g (grepPattern) is required if -t (trailingLines) argument is used."
+            sys.exit()
+        grep_trailing_lines = int(arg)
 
-#adb_args = ' '.join(sys.argv[1:])
+print 'log_level is "', log_level
+print 'grep_pattern is "', grep_pattern
+print 'grep_trailing_lines is "', grep_trailing_lines
 
-# if someone is piping in to us, use stdin as input.  if not, invoke adb logcat
-if os.isatty(sys.stdin.fileno()):
-    input = os.popen("adb logcat")
-else:
-    input = sys.stdin
+#sys.exit()
+
+# invoke adb logcat
+input = os.popen("adb logcat")
+
+def iFind(string, searchPattern):
+    return string.lower().find(searchPattern.lower())
 
 grep_trailing_counter = grep_trailing_lines+1
 while True:
@@ -170,24 +218,40 @@ while True:
             replace = RULES[matcher]
             message = matcher.sub(replace, message)
 
-        linebuf.write(message)
-        line = linebuf.getvalue()
-
         # Apply grep and log level filter
         filter_match = False
-        if log_level > -1:
-            if log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
-                filter_match = True
-        elif grep_pattern:
-            if line.find(grep_pattern) > -1:
-                grep_trailing_counter = 0
-                filter_match = True
+        if grep_pattern:
+            if line.lower().find(grep_pattern.lower()) > -1:
+                if log_level==-1 or log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
+                    grep_trailing_counter = 0
+                    filter_match = True
+                    if iFind(message,grep_pattern) > -1:
+                        matchStart = iFind(message,grep_pattern)
+                        matchEnd = matchStart + len(grep_pattern)
+                        linebuf.write(message[:matchStart])
+                        linebuf.write("%s%s%s" % (format(fg=YELLOW, dim=False),
+                            message[matchStart:matchEnd],
+                            format(reset=True))
+                        )
+                        linebuf.write(message[matchEnd:])
+                    else:
+                        linebuf.write(message)
+            if not filter_match:
+                linebuf.write(message)
         else:
-            filter_match = True
+            linebuf.write(message)
+            if log_level > -1:
+                if log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
+                    filter_match = True
+            else:
+                filter_match = True
         grep_trailing_counter += 1
         if not filter_match:
-            if grep_trailing_counter > grep_trailing_lines+1:
+            if grep_trailing_lines<99 and grep_trailing_counter > grep_trailing_lines+1:
                 continue
+
+        line = linebuf.getvalue()
+
 
     print line
     #if len(line) == 0: break

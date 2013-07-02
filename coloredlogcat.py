@@ -6,9 +6,11 @@ Colored and Indented adb (Android Debugging) Output
 
 
 ARGUMENTS:
- -l <logLevel>         - number - 0 (all) to 4 (errors only)
- -g <grepPattern>      - string - (Regex not supported)
- -t <trailingLines>    - number - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
+ -h                   - Print Help
+ -l<logLevel>         - NUMBER - 0 (all) to 4 (errors only)
+ -g<grepPattern>      - STRING - (Regex not supported)
+ -t<trailingLines>    - NUMBER - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
+ -i                   - Case Insensitive grep
 
 EXAMPLES:
  - Show full adb logcat with color and formatting:
@@ -17,6 +19,8 @@ EXAMPLES:
        $ ./coloredlogcat.py -l3
  - Only show lines containing the word ZEBRA:
        $ ./coloredlogcat.py -gZEBRA
+ - Only show lines containing the word ZEBRA, zebra, Zebra etc:
+       $ ./coloredlogcat.py -gZEBRA -i
  - Show lines containing the pattern \'MONKEY HAT\' and the next 5 trailing lines
        $ ./coloredlogcat.py -g\'monkey hat\' -t5
  - Show all Info, Warnings and Errors and highlight the word ZEBRA
@@ -119,29 +123,6 @@ TAGTYPES = {
 
 retag = re.compile("^([A-Z])/([^\(]+)\(([^\)]+)\): (.*)$")
 
-HELP_MESSAGE = "\n".join([
-    '\ncoloredlogcat.py',
-    'Colored and Indented adb (Android Debugging) Output',
-    '\n',
-    'ARGUMENTS:',
-    ' -l <logLevel>         - number - 0 (all) to 4 (errors only)',
-    ' -g <grepPattern>      - string - (Regex not supported)',
-    ' -t <trailingLines>    - number - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern'
-    '\n',
-    'EXAMPLES:',
-    ' - Show full adb logcat with color and formatting:',
-    '       $ ./coloredlogcat.py',
-    ' - Only Warnings and Errors',
-    '       $ ./coloredlogcat.py -l3',
-    ' - Only show lines containing the word ZEBRA:',
-    '       $ ./coloredlogcat.py -gZEBRA',
-    ' - Show lines containing the pattern \'MONKEY HAT\' and the next 5 trailing lines',
-    '       $ ./coloredlogcat.py -g\'monkey hat\' -t5',
-    ' - Show all Info, Warnings and Errors and highlight the word ZEBRA',
-    '       $ ./coloredlogcat.py -l2 -g\'ZEBRA\' -t99',
-    '\n'
-])
-
 __doc__
 
 # get args
@@ -149,12 +130,13 @@ __doc__
 log_level = -1
 grep_pattern = None
 grep_trailing_lines = 0
+grep_case_insensitive = False
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"hl:g:t:")
+    opts, args = getopt.getopt(sys.argv[1:],"hl:g:it:")
 except getopt.GetoptError:
     print __doc__
     sys.exit(2)
-opts, args = getopt.getopt(sys.argv[1:],"hl:g:t:",)
+opts, args = getopt.getopt(sys.argv[1:],"hl:g:it:",)
 for opt, arg in opts:
     if opt in ("-h", "--help","-?"):
         print __doc__
@@ -163,10 +145,9 @@ for opt, arg in opts:
         log_level = int(arg)
     if opt in ("-g"):
         grep_pattern = arg
+    if opt in ("-i"):
+        grep_case_insensitive = True
     if opt in ("-t"):
-        if not grep_pattern:
-            print "Error: -g (grepPattern) is required if -t (trailingLines) argument is used."
-            sys.exit()
         grep_trailing_lines = int(arg)
 
 print 'log_level is "', log_level
@@ -178,8 +159,10 @@ print 'grep_trailing_lines is "', grep_trailing_lines
 # invoke adb logcat
 input = os.popen("adb logcat")
 
-def iFind(string, searchPattern):
-    return string.lower().find(searchPattern.lower())
+def grepFind(string, searchPattern):
+    if grep_case_insensitive:
+        return string.lower().find(searchPattern.lower())
+    return string.find(searchPattern)
 
 grep_trailing_counter = grep_trailing_lines+1
 while True:
@@ -225,8 +208,8 @@ while True:
                 if log_level==-1 or log_level <= TAGTYPE_LOG_LEVELS[tagtype]:
                     grep_trailing_counter = 0
                     filter_match = True
-                    if iFind(message,grep_pattern) > -1:
-                        matchStart = iFind(message,grep_pattern)
+                    if grepFind(message,grep_pattern) > -1:
+                        matchStart = grepFind(message,grep_pattern)
                         matchEnd = matchStart + len(grep_pattern)
                         linebuf.write(message[:matchStart])
                         linebuf.write("%s%s%s" % (format(fg=YELLOW, dim=False),

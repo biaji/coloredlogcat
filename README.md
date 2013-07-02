@@ -25,7 +25,7 @@ Android Debug Colored Logcat with limited grep and log level filtering
        $ ./coloredlogcat.py -l2 -g\'ZEBRA\' -t99
        
        
-ATTRIBUTION:
+###Attribution
     This library was derived from Jeff Sharkey's coloredlogcat module:
     http://jsharkey.org/blog/2009/04/22/modifying-the-android-logcat-stream-for-full-color-debugging/
 

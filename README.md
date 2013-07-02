@@ -3,11 +3,12 @@ coloredlogcat
 
 Android Debug Colored Logcat with limited grep and log level filtering
 
+<pre>
 ARGUMENTS:
  -h                   - Print Help
- -l<logLevel>         - NUMBER - 0 (all) to 4 (errors only)
- -g<grepPattern>      - STRING - (Regex not supported)
- -t<trailingLines>    - NUMBER - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
+ -l logLevel          - NUMBER - 0 (all) to 4 (errors only)
+ -g grepPattern       - STRING - (Regex not supported)
+ -t trailingLines     - NUMBER - Number of lines after grepPattern match to display (use 99 to show all lines and just highlight grepPattern)
  -i                   - Case Insensitive grep
 
 EXAMPLES:
@@ -44,3 +45,4 @@ License Text for that module follows:
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
     See the License for the specific language governing permissions and 
     limitations under the License.
+</pre

@@ -213,13 +213,13 @@ while True:
                     if grepFind(message, grep_pattern) > -1:
                         matchStart = grepFind(message, grep_pattern)
                         matchEnd = matchStart + len(grep_pattern)
-                        linebuf.write(message[:matchStart])
-                        linebuf.write("%s%s%s" % (
+                        linebuf.write("%s%s%s%s%s" % (
+                            message[:matchStart],
                             format(fg=YELLOW, dim=False),
                             message[matchStart:matchEnd],
-                            format(reset=True)
+                            format(reset=True),
+                            message[matchEnd:]
                         ))
-                        linebuf.write(message[matchEnd:])
                     else:
                         linebuf.write(message)
             if not filter_match:

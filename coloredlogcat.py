@@ -111,7 +111,7 @@ PROCESS_WIDTH = 8  # 8 or -1
 HEADER_SIZE = TAGTYPE_WIDTH + 1 + TAG_WIDTH + 1 + PROCESS_WIDTH + 1
 
 TAGTYPE_LOG_LEVELS = {
-    "V": 0, "D": 1, "I": 2, "W": 3, "E": 4
+    "V": 0, "D": 1, "I": 2, "W": 3, "E": 4, "F": 5
 }
 
 TAGTYPES = {
@@ -120,6 +120,7 @@ TAGTYPES = {
     "I": "%s%s%s " % (format(fg=BLACK, bg=GREEN), "I".center(TAGTYPE_WIDTH), format(reset=True)),
     "W": "%s%s%s " % (format(fg=BLACK, bg=YELLOW), "W".center(TAGTYPE_WIDTH), format(reset=True)),
     "E": "%s%s%s " % (format(fg=BLACK, bg=RED), "E".center(TAGTYPE_WIDTH), format(reset=True)),
+    "F": "%s%s%s " % (format(fg=BLACK, bg=RED), "F".center(TAGTYPE_WIDTH), format(reset=True),)
 }
 
 retag = re.compile("^([A-Z])/([^\(]+)\(([^\)]+)\): (.*)$")

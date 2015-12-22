@@ -158,8 +158,11 @@ print 'grep_trailing_lines is "', grep_trailing_lines
 
 #sys.exit()
 
-# invoke adb logcat
-input = os.popen("adb logcat")
+# if someone is piping in to us, use stdin as input.  if not, invoke adb logcat
+if os.isatty(sys.stdin.fileno()):
+    input = os.popen("adb logcat")
+else:
+    input = sys.stdin
 
 
 def grepFind(string, searchPattern):
